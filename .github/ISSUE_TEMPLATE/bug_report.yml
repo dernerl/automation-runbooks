@@ -1,0 +1,52 @@
+name: Bug Report
+description: Something isn't working as expected
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill in as much detail as possible. Check the runbook job output first.
+
+  - type: dropdown
+    id: runbook
+    attributes:
+      label: Affected Runbook
+      options:
+        - Invoke-ServiceAccountMonitor
+        - Other / Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      placeholder: Describe the unexpected behavior clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Job Output / Error Message
+      description: Paste the relevant output from the Azure Automation job stream.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        - PowerShell Runtime: 7.4
+        - Microsoft.Graph.Authentication version: x.x.x
+        - Entra Tenant type: Commercial / GCC / GCC-High

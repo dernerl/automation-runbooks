@@ -1,0 +1,41 @@
+name: Feature Request
+description: Suggest an improvement to an existing runbook
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: runbook
+    attributes:
+      label: Affected Runbook
+      options:
+        - Invoke-ServiceAccountMonitor
+        - All / General
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should be solved?
+      placeholder: Describe the gap or limitation in the current implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How should it work?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Nice to have
+        - Important
+        - Critical
+    validations:
+      required: true

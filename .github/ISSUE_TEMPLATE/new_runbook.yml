@@ -1,0 +1,63 @@
+name: New Runbook Request
+description: Suggest a completely new runbook for this collection
+title: "[New Runbook]: "
+labels: ["new-runbook"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea for a new Azure Automation runbook? Describe it here.
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use Case
+      description: What problem should the runbook solve? What triggered this idea?
+      placeholder: |
+        e.g. "After a CA policy change, guest accounts were silently blocked.
+        A runbook that monitors guest sign-in failures would have caught this early."
+    validations:
+      required: true
+
+  - type: textarea
+    id: trigger
+    attributes:
+      label: Trigger / Schedule
+      placeholder: |
+        - Daily schedule
+        - Event-based (Azure Monitor alert)
+        - On-demand only
+    validations:
+      required: true
+
+  - type: textarea
+    id: data_sources
+    attributes:
+      label: Data Sources
+      placeholder: |
+        - Graph API (Sign-in Logs, Groups, Users, ...)
+        - Azure Resource Manager
+        - Exchange Online
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Expected Output / Action
+      placeholder: |
+        - Email alert to responsible person
+        - Teams notification
+        - Create ticket in ITSM
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Required Permissions (if known)
+      placeholder: |
+        - Graph: AuditLog.Read.All, User.Read.All
+        - Azure RBAC: Reader on subscription
