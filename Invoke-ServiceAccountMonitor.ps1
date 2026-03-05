@@ -43,7 +43,7 @@ param(
     [Parameter(Mandatory=$false)]
     [int]$LookbackHours = 24,
 
-    [switch]$DryRun = $true
+    [bool]$DryRun = $true
 )
 
 # ==== Verbindung ====
