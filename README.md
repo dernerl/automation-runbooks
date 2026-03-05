@@ -12,6 +12,15 @@ Prüft täglich alle User-Accounts in einer Entra-Gruppe auf fehlgeschlagene Sig
 (interactive + non-interactive) und benachrichtigt den hinterlegten Sponsor.
 Ist kein Sponsor eingetragen, geht der Alert an eine Helpdesk-Adresse.
 
+#### Alert-Logik
+
+| Situation | "Kein Sponsor"-Alert | "Login-Fehler"-Alert |
+|---|---|---|
+| Sponsor ✓, kein Fehler | – | – |
+| Sponsor ✓, Fehler | – | → Sponsor |
+| Kein Sponsor, kein Fehler | → Helpdesk | – |
+| Kein Sponsor, Fehler | → Helpdesk | → Helpdesk |
+
 **Hintergrund:** Kerberos Seamless SSO und andere Service-Account-basierte Flows
 können lautlos brechen wenn eine Conditional Access Policy greift. Dieses Runbook
 macht solche Fehler frühzeitig sichtbar.
