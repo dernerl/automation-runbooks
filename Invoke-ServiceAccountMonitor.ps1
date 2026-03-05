@@ -105,8 +105,12 @@ function Send-AlertMail {
     } catch {
         Write-Error "  Mail-Fehler an $To`: $($_.Exception.Message)"
         if ($_.ErrorDetails.Message) {
-            $detail = $_.ErrorDetails.Message | ConvertFrom-Json
-            Write-Error "  Graph-Error: $($detail.error.code) – $($detail.error.message)"
+            try {
+                $detail = $_.ErrorDetails.Message | ConvertFrom-Json
+                Write-Error "  Graph-Error: $($detail.error.code) – $($detail.error.message)"
+            } catch {
+                Write-Error "  Graph-Error (raw): $($_.ErrorDetails.Message)"
+            }
         }
     }
 }
