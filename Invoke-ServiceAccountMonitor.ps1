@@ -224,6 +224,26 @@ foreach ($member in $members) {
         Write-Warning "  Fehler bei non-interactive Sign-in Abfrage: $($_.Exception.Message)"
     }
 
+    # ==== Kein Sponsor → eigener Alert an Helpdesk ====
+    if (-not $sponsorMail) {
+        $sponsorSubject = "[Service Account] Kein Sponsor hinterlegt: $upn"
+        $sponsorBody    = @"
+<html><body style="font-family:Segoe UI,Arial,sans-serif;font-size:14px">
+<h2 style="color:#e67e00">Service Account ohne Sponsor</h2>
+<p>Für den folgenden Service Account ist kein Sponsor in Entra ID hinterlegt:</p>
+<table style="border-collapse:collapse;margin-bottom:16px">
+  <tr><th style="text-align:left;padding:4px 8px;background:#f0f0f0">Account</th>
+      <td style="padding:4px 8px">$upn</td></tr>
+</table>
+<p>Bitte das <b>Sponsors-Feld</b> in Entra ID befüllen:<br/>
+   Entra Portal → Users → $upn → Sponsors</p>
+<p>Ohne Sponsor landen künftige Login-Alerts hier beim Helpdesk statt bei der zuständigen Person.</p>
+<p style="color:#888;font-size:12px">Automatischer Alert – Azure Automation | Service Account Monitor</p>
+</body></html>
+"@
+        Send-AlertMail -To $HelpdeskMail -Subject $sponsorSubject -HtmlBody $sponsorBody
+    }
+
     if ($failedSignIns.Count -eq 0) {
         Write-Output "  ✓ Keine fehlgeschlagenen Logins"
         $statsOk++
@@ -235,7 +255,7 @@ foreach ($member in $members) {
         Write-Output "    [$($s.createdDateTime)] Code $($s.status.errorCode) – $($s.status.failureReason) | App: $($s.appDisplayName)"
     }
 
-    # ==== Mail zusammenbauen ====
+    # ==== Login-Alert: Sponsor oder Helpdesk als Fallback ====
     $recipient = if ($sponsorMail) { $sponsorMail } else { $HelpdeskMail }
 
     $noSponsorNote = if (-not $sponsorMail) {
