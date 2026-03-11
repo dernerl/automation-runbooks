@@ -65,9 +65,10 @@ function Get-AllPages {
         if ($response.value) { $allItems += @($response.value) }
         $Uri = $response.'@odata.nextLink'
     } while ($Uri)
-    # Rückgabe immer als Array – Aufrufer muss $result = @(Get-AllPages ...) verwenden
-    # damit PS bei 1 Element kein Hashtable zurückgibt (Pipeline-Enumeration-Gotcha)
-    return , $allItems  # Komma-Operator verhindert Pipeline-Enumeration
+    # Komma-Operator verhindert Pipeline-Enumeration (PS würde 1-Element-Arrays auspacken).
+    # Aufrufer OHNE @() verwenden: $result = Get-AllPages ...
+    # @(Get-AllPages ...) würde den Array nochmals einwickeln → Count=1 Bug!
+    return , $allItems
 }
 
 function Send-AlertMail {
