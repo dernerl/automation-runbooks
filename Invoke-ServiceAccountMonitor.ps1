@@ -194,38 +194,19 @@ foreach ($member in $members) {
         Write-Warning "  Sponsor-Feld nicht abrufbar: $($_.Exception.Message)"
     }
 
-    $failedSignIns = [System.Collections.Generic.List[object]]::new()
-
-    # Interactive Sign-ins mit Fehler
+    # Alle fehlgeschlagenen Sign-ins (interactive + non-interactive)
+    $failedSignIns = @()
     try {
         $uri = "https://graph.microsoft.com/v1.0/auditLogs/signIns?" +
                "`$filter=userId eq '$userId'" +
                " and createdDateTime ge $sinceStr" +
                " and status/errorCode ne 0" +
-               " and isInteractive eq true" +
                "&`$select=id,createdDateTime,status,appDisplayName,ipAddress,isInteractive" +
-               "&`$top=25"
-        $resp = Invoke-MgGraphRequest -Method GET -Uri $uri -ErrorAction Stop
-        if ($resp.value) { $failedSignIns.AddRange([object[]]@($resp.value)) }
-        Write-Output "  Interactive Fehler: $($resp.value.Count)"
+               "&`$orderby=createdDateTime desc"
+        $failedSignIns = @(Get-AllPages -Uri $uri)
+        Write-Output "  Fehler gesamt: $($failedSignIns.Count)"
     } catch {
-        Write-Warning "  Fehler bei interactive Sign-in Abfrage: $($_.Exception.Message)"
-    }
-
-    # Non-interactive Sign-ins mit Fehler (Kerberos SSO, token refresh etc.)
-    try {
-        $uri = "https://graph.microsoft.com/v1.0/auditLogs/signIns?" +
-               "`$filter=userId eq '$userId'" +
-               " and createdDateTime ge $sinceStr" +
-               " and status/errorCode ne 0" +
-               " and isInteractive eq false" +
-               "&`$select=id,createdDateTime,status,appDisplayName,ipAddress,isInteractive" +
-               "&`$top=25"
-        $resp = Invoke-MgGraphRequest -Method GET -Uri $uri -ErrorAction Stop
-        if ($resp.value) { $failedSignIns.AddRange([object[]]@($resp.value)) }
-        Write-Output "  Non-Interactive Fehler: $($resp.value.Count)"
-    } catch {
-        Write-Warning "  Fehler bei non-interactive Sign-in Abfrage: $($_.Exception.Message)"
+        Write-Warning "  Fehler bei Sign-in Abfrage: $($_.Exception.Message)"
     }
 
     # ==== Kein Sponsor → eigener Alert an Helpdesk ====
