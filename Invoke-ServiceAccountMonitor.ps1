@@ -203,7 +203,7 @@ foreach ($member in $members) {
                " and status/errorCode ne 0" +
                "&`$select=id,createdDateTime,status,appDisplayName,ipAddress,isInteractive" +
                "&`$orderby=createdDateTime desc"
-        $failedSignIns = @(Get-AllPages -Uri $uri)
+        $failedSignIns = Get-AllPages -Uri $uri
         Write-Output "  Fehler gesamt: $($failedSignIns.Count)"
     } catch {
         Write-Warning "  Fehler bei Sign-in Abfrage: $($_.Exception.Message)"
