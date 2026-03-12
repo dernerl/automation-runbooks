@@ -148,7 +148,7 @@ try {
 }
 
 # ==== Members holen (nur User-Objekte, keine Gruppen/Devices/SPNs) ====
-$members = Get-AllPages -Uri "https://graph.microsoft.com/v1.0/groups/$($group.id)/members/microsoft.graph.user?`$select=id,displayName,userPrincipalName,mail"
+$members = Get-AllPages -Uri "https://graph.microsoft.com/v1.0/groups/$($group.id)/members/microsoft.graph.user?`$select=id,displayName,userPrincipalName,mail,onPremisesSyncEnabled"
 Write-Output "✓ $($members.Count) Service Account(s) in Gruppe"
 
 if ($members.Count -eq 0) {
@@ -175,7 +175,9 @@ foreach ($member in $members) {
     Write-Output ""
     Write-Output "--- $upn ---"
 
-    # Sponsor immer prüfen (unabhängig von Sign-in-Status)
+    # Sponsor prüfen (unabhängig von Sign-in-Status)
+    # On-prem synced Accounts: Sponsor-Feld ist in Entra nicht beschreibbar → kein Alert
+    $isOnPremSynced = $member.onPremisesSyncEnabled -eq $true
     $sponsorMail    = $null
     $sponsorDisplay = $null
     try {
@@ -188,8 +190,12 @@ foreach ($member in $members) {
             $sponsorMail    = if ($sponsor.mail) { $sponsor.mail } else { $sponsor.userPrincipalName }
             Write-Output "  Sponsor: $sponsorDisplay ($sponsorMail)"
         } else {
-            Write-Output "  ! Kein Sponsor hinterlegt"
-            $statsNoSponsor++
+            if ($isOnPremSynced) {
+                Write-Output "  ! Kein Sponsor (on-prem synced – wird ignoriert)"
+            } else {
+                Write-Output "  ! Kein Sponsor hinterlegt"
+                $statsNoSponsor++
+            }
         }
     } catch {
         Write-Warning "  Sponsor-Feld nicht abrufbar: $($_.Exception.Message)"
@@ -221,8 +227,8 @@ foreach ($member in $members) {
         Write-Warning "  Fehler bei Sign-in Abfrage: $($_.Exception.Message)"
     }
 
-    # ==== Kein Sponsor → eigener Alert an Helpdesk ====
-    if (-not $sponsorMail) {
+    # ==== Kein Sponsor → eigener Alert an Helpdesk (nur Cloud-only Accounts) ====
+    if (-not $sponsorMail -and -not $isOnPremSynced) {
         $sponsorSubject = "[Service Account] Kein Sponsor hinterlegt: $upn"
         $sponsorBody    = @"
 <html><body style="font-family:Segoe UI,Arial,sans-serif;font-size:14px">
