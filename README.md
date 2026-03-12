@@ -18,8 +18,15 @@ Ist kein Sponsor eingetragen, geht der Alert an eine Helpdesk-Adresse.
 |---|---|---|
 | Sponsor ✓, kein Fehler | – | – |
 | Sponsor ✓, Fehler | – | → Sponsor |
-| Kein Sponsor, kein Fehler | → Helpdesk | – |
-| Kein Sponsor, Fehler | → Helpdesk | → Helpdesk |
+| Kein Sponsor (Cloud-only), kein Fehler | → Helpdesk | – |
+| Kein Sponsor (Cloud-only), Fehler | → Helpdesk | → Helpdesk |
+| Kein Sponsor (on-prem synced), kein Fehler | – | – |
+| Kein Sponsor (on-prem synced), Fehler | – | → Helpdesk |
+
+> **On-prem synced Accounts:** Das Sponsor-Feld ist in Entra ID nur für Cloud-only
+> Accounts beschreibbar. Bei on-prem synced Accounts wird daher kein "Kein Sponsor"-Alert
+> gesendet — das Feld kann dort nicht befüllt werden. Login-Fehler-Alerts gehen
+> in diesem Fall direkt an den Helpdesk.
 
 **Hintergrund:** Kerberos Seamless SSO und andere Service-Account-basierte Flows
 können lautlos brechen wenn eine Conditional Access Policy greift. Dieses Runbook
@@ -78,3 +85,4 @@ cp .env.example .env
 | `50072` | MFA Registrierung erforderlich |
 | `50126` | Falsches Passwort / Credentials ungültig |
 | `50097` | Device Authentication erforderlich |
+| `700003` | Device object was not found (Token/Geräte-Problem) |
