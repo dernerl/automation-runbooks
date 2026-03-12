@@ -195,18 +195,28 @@ foreach ($member in $members) {
         Write-Warning "  Sponsor-Feld nicht abrufbar: $($_.Exception.Message)"
     }
 
-    # Alle Sign-ins holen, dann client-seitig auf Fehler filtern
-    # (status/errorCode ne 0 im OData-Filter liefert bei manchen Accounts leere Ergebnisse)
+    # Beta-Endpoint nötig: v1.0 liefert non-interactive Sign-ins nicht zurück
+    # (signInEventTypes existiert nur in beta)
+    # errorCode client-seitig filtern (errorCode=0 mit failureReason="Other." = Success)
     $failedSignIns = @()
     try {
-        $uri = "https://graph.microsoft.com/v1.0/auditLogs/signIns?" +
+        $uriInteractive = "https://graph.microsoft.com/beta/auditLogs/signIns?" +
                "`$filter=userId eq '$userId'" +
                " and createdDateTime ge $sinceStr" +
+               " and signInEventTypes/any(t: t eq 'interactiveUser')" +
                "&`$select=id,createdDateTime,status,appDisplayName,ipAddress,isInteractive" +
                "&`$orderby=createdDateTime desc"
-        $allSignIns = Get-AllPages -Uri $uri
+        $uriNonInteractive = "https://graph.microsoft.com/beta/auditLogs/signIns?" +
+               "`$filter=userId eq '$userId'" +
+               " and createdDateTime ge $sinceStr" +
+               " and signInEventTypes/any(t: t eq 'nonInteractiveUser')" +
+               "&`$select=id,createdDateTime,status,appDisplayName,ipAddress,isInteractive" +
+               "&`$orderby=createdDateTime desc"
+        $interactive    = Get-AllPages -Uri $uriInteractive
+        $nonInteractive = Get-AllPages -Uri $uriNonInteractive
+        $allSignIns = @($interactive) + @($nonInteractive)
         $failedSignIns = @($allSignIns | Where-Object { $_.status.errorCode -ne 0 })
-        Write-Output "  Sign-ins gesamt: $($allSignIns.Count) | davon Fehler: $($failedSignIns.Count)"
+        Write-Output "  Sign-ins: $($interactive.Count) interactive + $($nonInteractive.Count) non-interactive | davon Fehler: $($failedSignIns.Count)"
     } catch {
         Write-Warning "  Fehler bei Sign-in Abfrage: $($_.Exception.Message)"
     }
