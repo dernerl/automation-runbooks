@@ -1,14 +1,37 @@
 # automation-runbooks
 
-Azure Automation Runbooks (PowerShell 7) für Entra ID / Microsoft 365.
+Azure Automation Runbooks (PowerShell 7) fuer Entra ID / Microsoft 365.
+
+## Repo-Struktur
+
+```
+automation-runbooks/
+├── service-account-monitor/
+│   ├── Invoke-ServiceAccountMonitor.ps1
+│   ├── setup.sh
+│   ├── test.sh
+│   ├── grant-permissions.sh
+│   └── .env.example
+├── manage-teams-team/
+│   ├── Manage-TeamsTeam.ps1
+│   ├── setup.sh
+│   ├── test.sh
+│   ├── grant-permissions.sh
+│   └── .env.example
+├── README.md
+├── CONTRIBUTING.md
+└── CLAUDE.md
+```
+
+Jedes Runbook lebt in einem eigenen Ordner mit allen Companion-Scripts und eigener `.env`.
 
 ---
 
 ## Runbooks
 
-### [`Invoke-ServiceAccountMonitor`](./Invoke-ServiceAccountMonitor.ps1)
+### [`Invoke-ServiceAccountMonitor`](./service-account-monitor/Invoke-ServiceAccountMonitor.ps1)
 
-Prüft täglich alle User-Accounts in einer Entra-Gruppe auf fehlgeschlagene Sign-ins
+Prueft taeglich alle User-Accounts in einer Entra-Gruppe auf fehlgeschlagene Sign-ins
 (interactive + non-interactive) und benachrichtigt den hinterlegten Sponsor.
 Ist kein Sponsor eingetragen, geht der Alert an eine Helpdesk-Adresse.
 
@@ -23,14 +46,14 @@ Ist kein Sponsor eingetragen, geht der Alert an eine Helpdesk-Adresse.
 | Kein Sponsor (on-prem synced), kein Fehler | – | – |
 | Kein Sponsor (on-prem synced), Fehler | – | → Helpdesk |
 
-> **On-prem synced Accounts:** Das Sponsor-Feld ist in Entra ID nur für Cloud-only
+> **On-prem synced Accounts:** Das Sponsor-Feld ist in Entra ID nur fuer Cloud-only
 > Accounts beschreibbar. Bei on-prem synced Accounts wird daher kein "Kein Sponsor"-Alert
-> gesendet — das Feld kann dort nicht befüllt werden. Login-Fehler-Alerts gehen
+> gesendet — das Feld kann dort nicht befuellt werden. Login-Fehler-Alerts gehen
 > in diesem Fall direkt an den Helpdesk.
 
 **Hintergrund:** Kerberos Seamless SSO und andere Service-Account-basierte Flows
-können lautlos brechen wenn eine Conditional Access Policy greift. Dieses Runbook
-macht solche Fehler frühzeitig sichtbar.
+koennen lautlos brechen wenn eine Conditional Access Policy greift. Dieses Runbook
+macht solche Fehler fruehzeitig sichtbar.
 
 #### Voraussetzungen
 
@@ -45,12 +68,14 @@ macht solche Fehler frühzeitig sichtbar.
   | `Mail.Send` | Alerts versenden |
 - Shared Mailbox oder User-Mailbox als Absender
 - Entra-Gruppe `Conditional Access Service Accounts` (Name konfigurierbar)
-- Sponsor-Feld der Service Accounts befüllt (`Entra Portal → User → Sponsors`)
+- Sponsor-Feld der Service Accounts befuellt (`Entra Portal → User → Sponsors`)
 
 #### Setup
 
 ```bash
-# 1. .env aus Vorlage erstellen und befüllen
+cd service-account-monitor
+
+# 1. .env aus Vorlage erstellen und befuellen
 cp .env.example .env
 
 # 2. Graph Permissions setzen (braucht Global Admin)
@@ -73,7 +98,7 @@ cp .env.example .env
 | `GroupName` | `Conditional Access Service Accounts` | Entra-Gruppe mit den Service Accounts |
 | `SenderMailbox` | – | Absender-Mailbox (UPN) |
 | `HelpdeskMail` | – | Fallback wenn kein Sponsor hinterlegt |
-| `LookbackHours` | `24` | Wie viele Stunden zurück geprüft wird |
+| `LookbackHours` | `24` | Wie viele Stunden zurueck geprueft wird |
 | `DryRun` | `$true` | Wenn `$true`: kein Mail, nur Log-Output |
 
 #### Bekannte Entra Error Codes
@@ -83,6 +108,65 @@ cp .env.example .env
 | `53003` | Conditional Access Policy blockiert den Login |
 | `50057` | Account deaktiviert |
 | `50072` | MFA Registrierung erforderlich |
-| `50126` | Falsches Passwort / Credentials ungültig |
+| `50126` | Falsches Passwort / Credentials ungueltig |
 | `50097` | Device Authentication erforderlich |
-| `700003` | Device object was not found (Token/Geräte-Problem) |
+| `700003` | Device object was not found (Token/Geraete-Problem) |
+
+---
+
+### [`Manage-TeamsTeam`](./manage-teams-team/Manage-TeamsTeam.ps1)
+
+Synchronisiert die Mitglieder einer oder mehrerer Entra-Gruppen in eine Teams-Gruppe.
+Mitglieder, die in mindestens einer der Quell-Gruppen sind, werden hinzugefuegt.
+Mitglieder, die in keiner Quell-Gruppe mehr enthalten sind, werden entfernt.
+Ein Automation-User kann per Parameter ausgeschlossen werden.
+
+#### Voraussetzungen
+
+- Azure Automation Account mit **System Assigned Managed Identity**
+- Graph API Permissions (Application):
+  | Permission | Zweck |
+  |---|---|
+  | `Group.ReadWrite.All` | Gruppenmitglieder lesen und aendern |
+  | `User.Read.All` | User-Details aufloesen |
+  | `TeamSettings.ReadWrite.All` | Teams-Gruppen verwalten |
+
+#### Setup
+
+```bash
+cd manage-teams-team
+
+# 1. .env aus Vorlage erstellen und befuellen
+cp .env.example .env
+
+# 2. Graph Permissions setzen (braucht Global Admin)
+./grant-permissions.sh
+
+# 3. Runbook + Runtime + Schedule deployen
+./setup.sh
+
+# 4. Testlauf (DryRun)
+./test.sh
+
+# 5. Live-Lauf
+./test.sh live
+```
+
+#### Parameter
+
+| Parameter | Typ | Beschreibung |
+|---|---|---|
+| `EntraGroupNames` | `string[]` | Eine oder mehrere Entra-Quellgruppen |
+| `TeamsGroupName` | `string` | Ziel-Teams-Gruppe |
+| `AutomationUserName` | `string` | UPN des Automation-Accounts (wird ignoriert) |
+| `DryRun` | `bool` | Wenn `$true`: keine Aenderungen, nur Log-Output |
+
+#### Beispiel
+
+```powershell
+# DryRun – zeigt nur an, was passieren wuerde
+.\Manage-TeamsTeam.ps1 -EntraGroupNames "Gruppe-A","Gruppe-B" -TeamsGroupName "Team Homeoffice" -DryRun $true
+
+# Live – fuehrt Aenderungen durch
+.\Manage-TeamsTeam.ps1 -EntraGroupNames "Gruppe-A","Gruppe-B","Gruppe-C" -TeamsGroupName "Team Homeoffice" -DryRun $false
+```
