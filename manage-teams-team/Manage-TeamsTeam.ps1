@@ -34,17 +34,20 @@ Permissions Requires
 
 param (
     [Parameter(Mandatory=$false)]
-    [string[]]$EntraGroupNames,
+    [string]$EntraGroupNames,
 
     [Parameter(Mandatory=$false)]
     [string]$TeamsGroupName,
 
     [Parameter(Mandatory=$false)]
-    [string]$AutomationUserName ,
+    [string]$AutomationUserName,
 
     [Parameter(Mandatory=$false)]
-    [bool]$DryRun
+    [bool]$DryRun = $true
 )
+
+# Azure Automation uebergibt Arrays als Komma-separierten String
+$groupNameList = @($EntraGroupNames -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
 if ($DryRun) {
     Write-Output "=== DRY RUN – Es werden keine Änderungen vorgenommen ==="
@@ -61,7 +64,7 @@ $automationUser = Get-MgUser -Filter "UserPrincipalName eq '$AutomationUserName'
 
 # Mitglieder aller Entra-Gruppen sammeln (Vereinigung)
 $entraGroupMemberIds = @()
-foreach ($groupName in $EntraGroupNames) {
+foreach ($groupName in $groupNameList) {
     $entraGroup = Get-MgGroup -Filter "displayName eq '$groupName'"
     if (-not $entraGroup) {
         Write-Warning "Entra-Gruppe '$groupName' nicht gefunden – überspringe."
