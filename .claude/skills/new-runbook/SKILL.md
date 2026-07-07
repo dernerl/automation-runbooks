@@ -71,10 +71,10 @@ Zeige die Vorschlaege mit kurzer Begruendung und lass den User waehlen oder anpa
 
 ### 4. Scaffold ausfuehren
 
-Fuehre das Scaffold-Script aus dem Repo-Root aus:
+Fuehre das Scaffold-Script aus dem Root des Repos aus, in dem du gerade arbeitest (das Runbook landet dort, nicht im automation-runbooks-Repo selbst, falls scaffold.sh dorthin verlinkt ist):
 
 ```bash
-cd /Users/hug/Desktop/YOLO-WORKBENCH/automation-runbooks && ./scaffold.sh <RunbookName>
+./scaffold.sh <RunbookName>
 ```
 
 ### 5. Naechste Schritte kommunizieren
