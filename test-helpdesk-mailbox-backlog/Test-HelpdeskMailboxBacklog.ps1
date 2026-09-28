@@ -209,12 +209,13 @@ try {
 
         $body = @"
 <p><b>Der Ticketsystem-Crawler scheint nicht mehr zu laufen.</b></p>
-<p>Im Posteingang von <b>$MailboxUpn</b> liegen <b>$($stuck.Count)</b> Mails, die aelter als $ThresholdMinutes Minuten sind.<br>
+<p>Im Posteingang von <b>$MailboxUpn</b> liegen <b>$($stuck.Count)</b> Mail(s), die aelter als $ThresholdMinutes Minuten sind.<br>
 Aelteste Mail: $($oldest.ToString('dd.MM.yyyy HH:mm')) (vor ca. $ageMin Min).</p>
 $(Build-MessageTable -Messages $stuck)
 <p>Bitte den Mail-Abruf des Ticketsystems pruefen. Sobald der Posteingang wieder abgearbeitet ist, kommt eine Entwarnung.</p>
 "@
-        Send-AlertMail -To $recipients -Subject "⚠ Ticketsystem: $($stuck.Count) Mails haengen im Posteingang $MailboxUpn" -HtmlBody $body
+        $mailWord = if ($stuck.Count -eq 1) { "Mail haengt" } else { "Mails haengen" }
+        Send-AlertMail -To $recipients -Subject "⚠ Ticketsystem: $($stuck.Count) $mailWord im Posteingang $MailboxUpn" -HtmlBody $body
 
         if (-not $DryRun) { Set-AutomationVariable -Name $StateVariableName -Value $true }
     }
