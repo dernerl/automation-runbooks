@@ -32,6 +32,14 @@ automation-runbooks/
 
 Jedes Runbook lebt in einem eigenen Ordner mit allen Companion-Scripts und eigener `.env`.
 
+### Runtime Environment
+
+Alle Runbooks laufen in der **gemeinsamen PowerShell-7.4-Runtime** des Automation Accounts
+(`RUNTIME_ENV` in der `.env`, in Prod `PowerShell-7-4`). `setup.sh` legt keine eigene Runtime an,
+sondern prueft nur, ob die Runtime existiert, PowerShell 7.4 ist und die Module aus
+`REQUIRED_MODULES` enthaelt – sonst bricht es mit einer Meldung ab. Fehlende Module werden
+zentral in der gemeinsamen Runtime installiert.
+
 ---
 
 ## Runbooks
@@ -65,7 +73,7 @@ macht solche Fehler fruehzeitig sichtbar.
 #### Voraussetzungen
 
 - Azure Automation Account mit **System Assigned Managed Identity**
-- Runtime Environment **PowerShell 7.4** mit `Microsoft.Graph.Authentication`
+- Gemeinsame Runtime Environment (PowerShell 7.4) mit `Microsoft.Graph.Authentication`
 - Graph API Permissions (Application):
   | Permission | Zweck |
   |---|---|
@@ -88,7 +96,7 @@ cp .env.example .env
 # 2. Graph Permissions setzen (braucht Global Admin)
 ./grant-permissions.sh
 
-# 3. Runbook + Runtime + Schedule deployen
+# 3. Runtime pruefen, Runbook + Schedule deployen
 ./setup.sh
 
 # 4. Testlauf (DryRun – kein Mail)
@@ -131,6 +139,7 @@ Ein Automation-User kann per Parameter ausgeschlossen werden.
 #### Voraussetzungen
 
 - Azure Automation Account mit **System Assigned Managed Identity**
+- Gemeinsame Runtime Environment (PowerShell 7.4) mit `Microsoft.Graph.Authentication`, `Microsoft.Graph.Groups`, `Microsoft.Graph.Users`
 - Graph API Permissions (Application):
   | Permission | Zweck |
   |---|---|
@@ -149,7 +158,7 @@ cp .env.example .env
 # 2. Graph Permissions setzen (braucht Global Admin)
 ./grant-permissions.sh
 
-# 3. Runbook + Runtime + Schedule deployen
+# 3. Runtime pruefen, Runbook + Schedule deployen
 ./setup.sh
 
 # 4. Testlauf (DryRun)
@@ -209,7 +218,7 @@ damit waehrend einer Stoerung nicht jede Stunde eine neue Mail kommt:
 #### Voraussetzungen
 
 - Azure Automation Account mit **System Assigned Managed Identity**
-- Runtime Environment **PowerShell 7.4** mit `Microsoft.Graph.Authentication`
+- Gemeinsame Runtime Environment (PowerShell 7.4) mit `Microsoft.Graph.Authentication`
 - Graph API Permissions (Application):
   | Permission | Zweck |
   |---|---|
@@ -231,7 +240,7 @@ cp .env.example .env
 # 2. Graph Permissions setzen (braucht Global Admin)
 ./grant-permissions.sh
 
-# 3. Runbook + Runtime + Zustands-Variable + stuendlichen Schedule deployen
+# 3. Runtime pruefen, Runbook + Zustands-Variable + stuendlichen Schedule deployen
 ./setup.sh
 
 # 4. Testlauf (DryRun – kein Mail, Zustand wird nicht gespeichert)

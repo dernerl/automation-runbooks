@@ -37,7 +37,7 @@ Das Scaffold erstellt folgenden Unterordner:
 ```
 mein-neues-runbook/
 ├── Mein-NeuesRunbook.ps1    # Das Runbook selbst
-├── setup.sh                  # Deploy-Script (Runbook + Runtime + Schedule)
+├── setup.sh                  # Deploy-Script (Runtime pruefen, Runbook + Schedule)
 ├── test.sh                   # Test-Script (DryRun + Live)
 ├── grant-permissions.sh      # Graph Permissions zuweisen
 └── .env.example              # Beispiel-Konfiguration (keine echten Werte!)
@@ -49,6 +49,7 @@ mein-neues-runbook/
 - **Logging:** `Write-Output` (Info), `Write-Warning` (Warnung), `Write-Error` (Fehler)
 - **DryRun:** Jedes Runbook muss einen `[bool]$DryRun = $true` Parameter haben (safe by default)
 - **Graph API:** `Invoke-MgGraphRequest` mit Pagination (`Get-AllPages` Helper)
+- **Runtime:** Gemeinsame PowerShell-7.4-Runtime des Automation Accounts nutzen, keine eigene pro Runbook. Benoetigte Module in `REQUIRED_MODULES` (`setup.sh`) eintragen
 - **Bash:** `set -euo pipefail`, sauberes Quoting
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`), englisch
 

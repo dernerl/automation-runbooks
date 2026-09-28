@@ -10,7 +10,7 @@ Azure Automation Runbooks (PowerShell 7.4) for Entra ID / M365 service account m
 
 Each runbook lives in its own subdirectory with companion scripts:
 
-- `cd <runbook-dir> && ./setup.sh` — deploy runbook + runtime + schedule to Azure
+- `cd <runbook-dir> && ./setup.sh` — verify shared runtime, deploy runbook + schedule to Azure
 - `cd <runbook-dir> && ./test.sh` — run in DryRun mode
 - `cd <runbook-dir> && ./test.sh live` — run with actual changes/emails
 - `cd <runbook-dir> && ./grant-permissions.sh` — assign Graph API permissions (requires Global Admin)
@@ -35,6 +35,7 @@ Mirror the existing pattern:
 - Graph API via `Invoke-MgGraphRequest` with pagination (`Get-AllPages` helper)
 - HTML email alerts via `Send-AlertMail`
 - Companion `setup.sh` and `test.sh` scripts
+- Use the Automation Account's shared PowerShell 7.4 runtime (`RUNTIME_ENV`, prod: `PowerShell-7-4`) — never create a per-runbook runtime; `setup.sh` only verifies it and its `REQUIRED_MODULES`
 
 ## Gotchas
 

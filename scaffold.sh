@@ -70,7 +70,7 @@ MI_OBJECT_ID="your-managed-identity-object-id"
 
 # Runbook
 RUNBOOK_NAME="__RUNBOOK_NAME__"
-RUNTIME_ENV="__RUNTIME_ENV__"
+RUNTIME_ENV="PowerShell-7-4"   # gemeinsame PS-7.4-Runtime des Automation Accounts (Name je Account pruefen)
 
 # Schedule (UTC)
 SCHEDULE_NAME="__SCHEDULE_NAME__"
@@ -82,11 +82,9 @@ SCHEDULE_HOUR="07"        # 07:00 UTC = 08:00 MEZ
 ENVEOF
 
 # Generate runtime-env and schedule names
-RUNTIME_ENV="psenv-${DIR_NAME}"
 SCHEDULE_NAME="daily-${DIR_NAME}"
 
 sed -i '' "s/__RUNBOOK_NAME__/$RUNBOOK_NAME/g" "$TARGET_DIR/.env.example"
-sed -i '' "s/__RUNTIME_ENV__/$RUNTIME_ENV/g" "$TARGET_DIR/.env.example"
 sed -i '' "s/__SCHEDULE_NAME__/$SCHEDULE_NAME/g" "$TARGET_DIR/.env.example"
 
 echo "  ✓ .env.example"
@@ -178,39 +176,47 @@ if [ -z "$ACTUAL_MI" ]; then
 fi
 echo "✓ Managed Identity: $ACTUAL_MI"
 
-# === 2. Runtime Environment ===
+# === 2. Runtime Environment pruefen ===
 echo ""
-echo "=== 2. Runtime Environment ($RUNTIME_ENV, PS 7.4) ==="
-RUNTIME_EXISTS=$(az automation runtime-environment list \
-    --resource-group "$RG" --automation-account-name "$AA" \
-    --query "[?name=='$RUNTIME_ENV'].name" -o tsv 2>/dev/null || echo "")
+echo "=== 2. Runtime Environment pruefen ($RUNTIME_ENV) ==="
+# Runbooks nutzen die gemeinsame PowerShell-7.4-Runtime des Automation Accounts –
+# es wird bewusst KEINE eigene Runtime pro Runbook angelegt. Hier nur pruefen,
+# ob sie existiert und die benoetigten Module enthaelt.
+REQUIRED_MODULES=("Microsoft.Graph.Authentication")
+RUNTIME_URL="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RG}/providers/Microsoft.Automation/automationAccounts/${AA}/runtimeEnvironments/${RUNTIME_ENV}"
 
-if [ -z "$RUNTIME_EXISTS" ]; then
-    az automation runtime-environment create \
-        --resource-group "$RG" \
-        --automation-account-name "$AA" \
-        --name "$RUNTIME_ENV" \
-        --location "$LOCATION" \
-        --language PowerShell \
-        --version 7.4 \
-        --output none
-    echo "✓ Runtime Environment erstellt"
-else
-    echo "  Runtime Environment '$RUNTIME_ENV' existiert bereits"
+RUNTIME_VERSION=$(az rest --method GET \
+    --url "${RUNTIME_URL}?api-version=2024-10-23" \
+    --query "join(' ', [properties.runtime.language, properties.runtime.version])" -o tsv 2>/dev/null || echo "")
+
+if [ -z "$RUNTIME_VERSION" ]; then
+    echo "FEHLER: Runtime Environment '$RUNTIME_ENV' existiert nicht in '$AA'."
+    echo "  RUNTIME_ENV in .env auf die gemeinsame PowerShell-7.4-Runtime des Accounts setzen."
+    exit 1
+fi
+if [ "$RUNTIME_VERSION" != "PowerShell 7.4" ]; then
+    echo "FEHLER: '$RUNTIME_ENV' ist '$RUNTIME_VERSION', erwartet 'PowerShell 7.4'."
+    exit 1
 fi
 
-PKG="Microsoft.Graph.Authentication"
-PKG_URI=$(curl -Ls -o /dev/null -w "%{url_effective}" \
-    "https://www.powershellgallery.com/api/v2/package/$PKG")
-echo "  Installiere: $PKG"
-az automation runtime-environment package create \
-    --resource-group "$RG" \
-    --automation-account-name "$AA" \
-    --runtime-environment-name "$RUNTIME_ENV" \
-    --name "$PKG" \
-    --content-uri "$PKG_URI" \
-    --output none
-echo "✓ $PKG installiert"
+INSTALLED=$(az rest --method GET \
+    --url "${RUNTIME_URL}/packages?api-version=2024-10-23" \
+    --query "value[].name" -o tsv)
+MISSING=0
+for PKG in "${REQUIRED_MODULES[@]}"; do
+    if grep -qix "$PKG" <<< "$INSTALLED"; then
+        echo "  ✓ $PKG"
+    else
+        echo "  ! $PKG fehlt"
+        MISSING=1
+    fi
+done
+if [ "$MISSING" -eq 1 ]; then
+    echo "FEHLER: Fehlende Module in der gemeinsamen Runtime '$RUNTIME_ENV' installieren"
+    echo "  (Portal → Automation Account → Runtime Environments → $RUNTIME_ENV → Packages)."
+    exit 1
+fi
+echo "✓ Runtime Environment '$RUNTIME_ENV' ($RUNTIME_VERSION) OK"
 
 # === 3. Runbook deployen ===
 echo ""
