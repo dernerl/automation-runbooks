@@ -18,6 +18,13 @@ automation-runbooks/
 │   ├── test.sh
 │   ├── grant-permissions.sh
 │   └── .env.example
+├── test-helpdesk-mailbox-backlog/
+│   ├── Test-HelpdeskMailboxBacklog.ps1
+│   ├── setup.sh
+│   ├── test.sh
+│   ├── grant-permissions.sh
+│   └── .env.example
+├── scaffold.sh
 ├── README.md
 ├── CONTRIBUTING.md
 └── CLAUDE.md
@@ -170,3 +177,87 @@ cp .env.example .env
 # Live – fuehrt Aenderungen durch
 .\Manage-TeamsTeam.ps1 -EntraGroupNames "Gruppe-A","Gruppe-B","Gruppe-C" -TeamsGroupName "Team Homeoffice" -DryRun $false
 ```
+
+---
+
+### [`Test-HelpdeskMailboxBacklog`](./test-helpdesk-mailbox-backlog/Test-HelpdeskMailboxBacklog.ps1)
+
+Ueberwacht den Posteingang des Ticketsystem-Postfachs. Das Ticketsystem holt Mails dort ab
+und verschiebt sie in einen Ordner – der Posteingang ist im Normalbetrieb also (fast) leer.
+Liegen dort mindestens `MinMessageCount` Mails, die aelter als `ThresholdMinutes` sind,
+haengt der Crawler vermutlich und es geht ein Alert raus.
+
+#### Alert-Logik
+
+Der Zustand wird in der Automation-Variable `HelpdeskBacklogAlertActive` gespeichert,
+damit waehrend einer Stoerung nicht jede Stunde eine neue Mail kommt:
+
+| Haengende Mails ≥ Schwelle | Alert bereits aktiv | Aktion |
+|---|---|---|
+| ja | nein | ⚠ Alert-Mail (mit Liste der Mails), Variable → `true` |
+| ja | ja | – (Stoerung haelt an) |
+| nein | ja | ✓ Entwarnungs-Mail, Variable → `false` |
+| nein | nein | – |
+
+> **Alert-Empfaenger ≠ ueberwachtes Postfach.** Ein Alert an `helpdesk@` wuerde selbst
+> im haengenden Posteingang liegen bleiben. Das Runbook warnt, wenn das passiert.
+
+> **Intervall:** Azure Automation Schedules laufen minimal stuendlich. Ein Ausfall faellt
+> daher nach 5–65 Minuten auf. Fuer kuerzere Intervalle weitere Schedules mit versetzter
+> Startzeit (z. B. :15, :30, :45) anlegen und mit dem Runbook verknuepfen.
+
+#### Voraussetzungen
+
+- Azure Automation Account mit **System Assigned Managed Identity**
+- Runtime Environment **PowerShell 7.4** mit `Microsoft.Graph.Authentication`
+- Graph API Permissions (Application):
+  | Permission | Zweck |
+  |---|---|
+  | `Mail.ReadBasic.All` | Posteingang lesen (nur Metadaten – kein Body, keine Anhaenge) |
+  | `Mail.Send` | Alerts versenden |
+- Shared Mailbox oder User-Mailbox als Absender
+- Empfohlen: Die Mail-Permissions gelten tenantweit. Per
+  [RBAC for Applications](https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac)
+  in Exchange Online auf das Helpdesk- und das Absender-Postfach einschraenken.
+
+#### Setup
+
+```bash
+cd test-helpdesk-mailbox-backlog
+
+# 1. .env aus Vorlage erstellen und befuellen
+cp .env.example .env
+
+# 2. Graph Permissions setzen (braucht Global Admin)
+./grant-permissions.sh
+
+# 3. Runbook + Runtime + Zustands-Variable + stuendlichen Schedule deployen
+./setup.sh
+
+# 4. Testlauf (DryRun – kein Mail, Zustand wird nicht gespeichert)
+./test.sh
+
+# 5. Live-Lauf
+./test.sh live
+```
+
+#### Parameter
+
+| Parameter | Default | Beschreibung |
+|---|---|---|
+| `MailboxUpn` | – | Ueberwachtes Postfach (z. B. `helpdesk@…`) |
+| `SenderMailbox` | – | Absender-Mailbox (UPN) |
+| `AlertRecipients` | – | Alert-Empfaenger, kommagetrennt |
+| `ThresholdMinutes` | `5` | Ab welchem Alter eine Mail als "haengt" gilt |
+| `MinMessageCount` | `1` | Ab wie vielen haengenden Mails alarmiert wird |
+| `StateVariableName` | `HelpdeskBacklogAlertActive` | Automation-Variable fuer den Alert-Zustand |
+| `DryRun` | `$true` | Wenn `$true`: kein Mail, Zustand wird nicht gespeichert |
+
+---
+
+## Neues Runbook anlegen
+
+```bash
+./scaffold.sh Verb-Noun   # z. B. ./scaffold.sh Invoke-LicenseReport → invoke-license-report/
+```
+

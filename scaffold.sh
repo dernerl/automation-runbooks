@@ -35,7 +35,7 @@ if ! echo "$RUNBOOK_NAME" | grep -qE '^[A-Z][a-zA-Z]+-[A-Z][a-zA-Z]+$'; then
 fi
 
 # Directory name: lowercase with hyphens
-DIR_NAME=$(echo "$RUNBOOK_NAME" | sed 's/\([A-Z]\)/-\1/g' | sed 's/^-//' | tr '[:upper:]' '[:lower:]')
+DIR_NAME=$(echo "$RUNBOOK_NAME" | sed 's/\([a-z]\)\([A-Z]\)/\1-\2/g' | tr '[:upper:]' '[:lower:]')
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$SCRIPT_DIR/$DIR_NAME"
@@ -305,6 +305,7 @@ echo "   2. 5 Min warten (Graph Permissions brauchen Zeit)"
 echo "   3. ./test.sh"
 echo ""
 SETUPEOF
+sed -i '' "s/__RUNBOOK_NAME__/$RUNBOOK_NAME/g" "$TARGET_DIR/setup.sh"
 echo "  ✓ setup.sh"
 
 # ==== test.sh ====
