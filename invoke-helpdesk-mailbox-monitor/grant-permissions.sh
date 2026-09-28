@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Test-HelpdeskMailboxBacklog – Graph API Permissions fuer Managed Identity
+# Invoke-HelpdeskMailboxMonitor – Graph API Permissions fuer Managed Identity
 # =============================================================================
 # Benoetigt: Global Admin oder Privileged Role Administrator
 # =============================================================================

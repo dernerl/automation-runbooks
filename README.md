@@ -18,8 +18,8 @@ automation-runbooks/
 │   ├── test.sh
 │   ├── grant-permissions.sh
 │   └── .env.example
-├── test-helpdesk-mailbox-backlog/
-│   ├── Test-HelpdeskMailboxBacklog.ps1
+├── invoke-helpdesk-mailbox-monitor/
+│   ├── Invoke-HelpdeskMailboxMonitor.ps1
 │   ├── setup.sh
 │   ├── test.sh
 │   ├── grant-permissions.sh
@@ -180,7 +180,7 @@ cp .env.example .env
 
 ---
 
-### [`Test-HelpdeskMailboxBacklog`](./test-helpdesk-mailbox-backlog/Test-HelpdeskMailboxBacklog.ps1)
+### [`Invoke-HelpdeskMailboxMonitor`](./invoke-helpdesk-mailbox-monitor/Invoke-HelpdeskMailboxMonitor.ps1)
 
 Ueberwacht den Posteingang des Ticketsystem-Postfachs. Das Ticketsystem holt Mails dort ab
 und verschiebt sie in einen Ordner – der Posteingang ist im Normalbetrieb also (fast) leer.
@@ -223,7 +223,7 @@ damit waehrend einer Stoerung nicht jede Stunde eine neue Mail kommt:
 #### Setup
 
 ```bash
-cd test-helpdesk-mailbox-backlog
+cd invoke-helpdesk-mailbox-monitor
 
 # 1. .env aus Vorlage erstellen und befuellen
 cp .env.example .env

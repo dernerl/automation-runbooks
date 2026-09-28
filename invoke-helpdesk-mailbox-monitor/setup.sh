@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Test-HelpdeskMailboxBacklog – Setup via Azure CLI
+# Invoke-HelpdeskMailboxMonitor – Setup via Azure CLI
 # =============================================================================
 set -euo pipefail
 

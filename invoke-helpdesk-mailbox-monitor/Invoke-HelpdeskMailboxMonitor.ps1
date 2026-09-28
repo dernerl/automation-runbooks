@@ -45,7 +45,7 @@
     - Mail.Send                (Alerts versenden)
 
 .EXAMPLE
-    .\Test-HelpdeskMailboxBacklog.ps1 -MailboxUpn "helpdesk@domain.com" -AlertRecipients "it@domain.com" -DryRun $true
+    .\Invoke-HelpdeskMailboxMonitor.ps1 -MailboxUpn "helpdesk@domain.com" -AlertRecipients "it@domain.com" -DryRun $true
 #>
 
 param (

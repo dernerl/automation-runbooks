@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Test-HelpdeskMailboxBacklog – Testlauf (DryRun)
+# Invoke-HelpdeskMailboxMonitor – Testlauf (DryRun)
 # =============================================================================
 set -euo pipefail
 
