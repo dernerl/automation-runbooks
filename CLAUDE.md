@@ -41,6 +41,7 @@ Mirror the existing pattern:
 
 - On-prem synced accounts: Sponsor field is read-only — skip sponsor alerts for these
 - Non-interactive sign-ins require `/beta/auditLogs/signIns` with `signInEventTypes` filter
-- Graph permissions take ~5 min to propagate after granting
+- Graph permissions take ~5 min to propagate after granting — Exchange mail permissions (`Mail.ReadBasic.All`) on a Managed Identity can take much longer: still `403 ErrorAccessDenied` 15 min after granting although a fresh token was issued, working next morning
+- Prod sender mailbox for alerts is `servobot@servolift.de` (`automation@servolift.de` does not exist → `404 ErrorInvalidUser` on sendMail)
 - Wrap arrays in `@()` to prevent PowerShell single-element unwrapping
 - Use `ms-graph-endpoint-research` skill before writing Graph API code
