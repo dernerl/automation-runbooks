@@ -256,7 +256,7 @@ cp .env.example .env
 |---|---|---|
 | `MailboxUpn` | – | Ueberwachtes Postfach (z. B. `helpdesk@…`) |
 | `SenderMailbox` | – | Absender-Mailbox (UPN) |
-| `AlertRecipients` | – | Alert-Empfaenger, kommagetrennt |
+| `AlertRecipients` | – | Alert-Empfaenger, kommagetrennt. Auch die Mailadresse eines Teams-Kanals (`…@de.teams.ms`) – Alerts erscheinen dann als Post im Kanal |
 | `ThresholdMinutes` | `5` | Ab welchem Alter eine Mail als "haengt" gilt |
 | `MinMessageCount` | `1` | Ab wie vielen haengenden Mails alarmiert wird |
 | `StateVariableName` | `HelpdeskBacklogAlertActive` | Automation-Variable fuer den Alert-Zustand |
